@@ -1,0 +1,42 @@
+Patient Login - Backend Prompt
+User Story:
+ As a patient, I want to securely log in using my email or phone and password so I can access my health information and services.
+Build a secure JWT-based login flow with flexible identifier support and middleware handling.
+API Endpoint
+POST /api/v1/patient/login
+Request Body:
+{
+  "email": "jane.smith@email.com",
+  "password": "SecurePassword123!"
+}
+Success Response (200)
+
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "access_token": "jwt-access-token-here",
+    "expires_in": 1800,
+    "token_type": "Bearer",
+    "patient": {
+      …patientData
+    }
+  }
+}
+
+JWT Token Configuration
+Token Type: Bearer
+Expiry: 30 minutes
+Payload Fields: patient_id, email, role
+Authentication Logic
+Accept login via email+ password.
+Validate input format and presence.
+Verify password using bcrypt.
+Generate a JWT token if credentials are valid.
+Validation Rules
+Identifiers must be valid email format.
+Passwords must be provided and non-empty.
+Testing Requirements
+Unit tests for login and bcrypt validation logic.
+Tests for JWT generation, payload structure, and expiry handling.
+
