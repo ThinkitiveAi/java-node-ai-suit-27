@@ -1,0 +1,103 @@
+Patient Registration - Backend Prompt
+Prompt :
+Create a backend module for Patient Registration with secure authentication and comprehensive validation. Use a database model that can work for relational (MySQL/PostgreSQL) or NoSQL (MongoDB) setups.
+Database Schema
+Patient Schema:
+- id (UUID / ObjectId)
+- first_name (string, required, min: 2, max: 50)
+- last_name (string, required, min: 2, max: 50)
+- email (string, unique, required, valid email format)
+- phone_number (string, unique, required, valid phone format)
+- password_hash (string, required)
+- date_of_birth (date, required, must be in past)
+- gender (enum: male/female/other/prefer_not_to_say, required)
+- address (object):
+  - street (string, required, max: 200)
+  - city (string, required, max: 100)
+  - state (string, required, max: 50)
+  - zip (string, required, valid postal code)
+- emergency_contact (object, optional):
+  - name (string, max: 100)
+  - phone (string, valid phone format)
+  - relationship (string, max: 50)
+- medical_history (array of strings, optional)
+- insurance_info (object, optional):
+  - provider (string)
+  - policy_number (string)
+- email_verified (boolean, default: false)
+- phone_verified (boolean, default: false)
+- is_active (boolean, default: true)
+- created_at (timestamp)
+- updated_at (timestamp)
+
+API Endpoint
+POST /api/v1/patient/register
+Request Body:
+{
+  "first_name": "Jane",
+  "last_name": "Smith",
+  "email": "jane.smith@email.com",
+  "phone_number": "+1234567890",
+  "password": "SecurePassword123!",
+  "confirm_password": "SecurePassword123!",
+  "date_of_birth": "1990-05-15",
+  "gender": "female",
+  "address": {
+    "street": "456 Main Street",
+    "city": "Boston",
+    "state": "MA",
+    "zip": "02101"
+  },
+  "emergency_contact": {
+    "name": "John Smith",
+    "phone": "+1234567891",
+    "relationship": "spouse"
+  },
+  "insurance_info": {
+    "provider": "Blue Cross",
+    "policy_number": "BC123456789"
+  }
+}
+
+Success Response (201):
+{
+  "success": true,
+  "message": "Patient registered successfully. Verification email sent.",
+  "data": {
+    "patient_id": "uuid-here",
+    "email": "jane.smith@email.com",
+    "phone_number": "+1234567890",
+    "email_verified": false,
+    "phone_verified": false
+  }
+}
+
+Implementation Requirements
+Validation Rules:
+Email must be unique and valid format
+Phone number must be unique and valid international format
+Password must contain: 8+ characters, uppercase, lowercase, number, special character
+Date of birth must be valid date in the past (age >= 13 for COPPA compliance)
+All required fields must be present and non-empty
+Gender must be from allowed enum values
+Address validation with proper postal code format
+Security Features:
+Hash passwords using bcrypt with salt rounds >= 12
+Store passwords securely (never log or return in responses)
+HIPAA compliance considerations for medical data
+Error Handling
+Validation Errors (422):
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": {
+    "email": ["Email is already registered"],
+    "password": ["Password must contain at least 8 characters"],
+    "date_of_birth": ["Must be at least 13 years old"]
+  }
+}
+Testing Requirements
+Unit tests for validation logic
+Test duplicate registration scenarios
+Test password hashing and security
+Test data privacy and encryption

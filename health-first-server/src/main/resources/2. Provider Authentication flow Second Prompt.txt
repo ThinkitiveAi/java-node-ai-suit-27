@@ -1,0 +1,42 @@
+Provider Login - Backend Prompt
+Prompt :
+User Story:
+ As a healthcare provider, I want to securely log in using my email and password so I can access my account and services on the platform.
+Implement secure JWT-based login with proper session handling and middleware checks.
+API Endpoint
+POST /api/v1/provider/login
+Request Body:
+{
+  "email": "john.doe@clinic.com",
+  "password": "SecurePassword123!",
+}
+Success Response (200):
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "access_token": "jwt-access-token-here",
+    "expires_in": 3600,
+    "token_type": "Bearer",
+    "provider": {
+      …providerData
+    }
+  }
+}
+JWT Token Configuration
+Access Token:
+Expiry: 1 hour 
+Payload: provider_id, email, role, specialization
+Implementation Requirements
+Authentication Logic:
+Accept login with email  + password
+Verify password using bcrypt comparison
+Generate JWT access token
+Validation Rules:
+Identifier (email) must be valid format
+Password must be provided and non-empty
+Testing Requirements
+Unit tests for authentication logic
+Test JWT token generation and validation
+
+

@@ -1,0 +1,228 @@
+Provider Availability Module - Backend Prompt
+Prompt :
+Create a comprehensive Provider Availability Management module that allows healthcare providers to set, update, and delete their available time slots. Include patient search functionality and appointment booking integration.
+Database Schema
+Provider Availability Schema:
+- id (UUID/ObjectId)
+- provider_id (foreign key to Provider, required)
+- date (YYYY-MM-DD format, required)
+- start_time (HH:mm format, required, 24-hour)
+- end_time (HH:mm format, required, 24-hour)
+- timezone (string, required, e.g., "America/New_York")
+- is_recurring (boolean, default: false)
+- recurrence_pattern (enum: daily/weekly/monthly, optional)
+- recurrence_end_date (date, optional)
+- slot_duration (integer, minutes, default: 30)
+- break_duration (integer, minutes, default: 0)
+- status (enum: available/booked/cancelled/blocked/maintenance, default: available)
+- max_appointments_per_slot (integer, default: 1)
+- current_appointments (integer, default: 0)
+- appointment_type (enum: consultation/follow_up/emergency/telemedicine, default: consultation)
+- location (object):
+  - type (enum: clinic/hospital/telemedicine/home_visit)
+  - address (string, if physical location)
+  - room_number (string, optional)
+- pricing (object, optional):
+  - base_fee (decimal)
+  - insurance_accepted (boolean)
+  - currency (string, default: "USD")
+- notes (text, optional, max: 500)
+- special_requirements (array of strings, optional)
+- created_at (timestamp)
+- updated_at (timestamp)
+
+Appointment Slots (Generated from Availability):
+- id (UUID/ObjectId)
+- availability_id (foreign key)
+- provider_id (foreign key)
+- slot_start_time (datetime with timezone)
+- slot_end_time (datetime with timezone)
+- status (enum: available/booked/cancelled/blocked)
+- patient_id (foreign key, nullable)
+- appointment_type (string)
+- booking_reference (string, unique)
+
+Core API Endpoints
+1. Create Availability Slots
+POST /api/v1/provider/availability
+Request Body:
+{
+  "date": "2024-02-15",
+  "start_time": "09:00",
+  "end_time": "17:00",
+  "timezone": "America/New_York",
+  "slot_duration": 30,
+  "break_duration": 15,
+  "is_recurring": true,
+  "recurrence_pattern": "weekly",
+  "recurrence_end_date": "2024-08-15",
+  "appointment_type": "consultation",
+  "location": {
+    "type": "clinic",
+    "address": "123 Medical Center Dr, New York, NY 10001",
+    "room_number": "Room 205"
+  },
+  "pricing": {
+    "base_fee": 150.00,
+    "insurance_accepted": true,
+    "currency": "USD"
+  },
+  "special_requirements": ["fasting_required", "bring_insurance_card"],
+  "notes": "Standard consultation slots"
+}
+
+Success Response (201):
+{
+  "success": true,
+  "message": "Availability slots created successfully",
+  "data": {
+    "availability_id": "uuid-here",
+    "slots_created": 32,
+    "date_range": {
+      "start": "2024-02-15",
+      "end": "2024-08-15"
+    },
+    "total_appointments_available": 224
+  }
+}
+
+2. Get Provider Availability
+GET /api/v1/provider/:provider_id/availability
+Query Parameters:
+start_date (YYYY-MM-DD, required)
+end_date (YYYY-MM-DD, required)
+status (available/booked/cancelled/blocked, optional)
+appointment_type (optional)
+timezone (optional, defaults to provider's timezone)
+Success Response (200):
+{
+  "success": true,
+  "data": {
+    "provider_id": "uuid-here",
+    "availability_summary": {
+      "total_slots": 48,
+      "available_slots": 32,
+      "booked_slots": 14,
+      "cancelled_slots": 2
+    },
+    "availability": [
+      {
+        "date": "2024-02-15",
+        "slots": [
+          {
+            "slot_id": "uuid-here",
+            "start_time": "09:00",
+            "end_time": "09:30",
+            "status": "available",
+            "appointment_type": "consultation",
+            "location": {
+              "type": "clinic",
+              "address": "123 Medical Center Dr",
+              "room_number": "Room 205"
+            },
+            "pricing": {
+              "base_fee": 150.00,
+              "insurance_accepted": true
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+
+3. Update Specific Availability Slot
+PUT /api/v1/provider/availability/:slot_id
+Request Body:
+{
+  "start_time": "10:00",
+  "end_time": "10:30",
+  "status": "available",
+  "notes": "Updated consultation time",
+  "pricing": {
+    "base_fee": 175.00
+  }
+}
+
+4. Delete Availability Slot
+DELETE /api/v1/provider/availability/:slot_id
+Query Parameters:
+delete_recurring (boolean, optional) - Delete all recurring instances
+reason (string, optional) - Reason for deletion
+5. Patient Search for Available Slots
+GET /api/v1/availability/search
+Query Parameters:
+date (YYYY-MM-DD, optional)
+start_date & end_date (date range, optional)
+specialization (string, optional)
+location (string, optional - city, state, or zip)
+appointment_type (optional)
+insurance_accepted (boolean, optional)
+max_price (decimal, optional)
+timezone (string, optional)
+available_only (boolean, default: true)
+Success Response (200):
+{
+  "success": true,
+  "data": {
+    "search_criteria": {
+      "date": "2024-02-15",
+      "specialization": "cardiology",
+      "location": "New York, NY"
+    },
+    "total_results": 15,
+    "results": [
+      {
+        "provider": {
+          "id": "uuid-here",
+          "name": "Dr. John Doe",
+          "specialization": "Cardiology",
+          "years_of_experience": 15,
+          "rating": 4.8,
+          "clinic_address": "123 Medical Center Dr, New York, NY"
+        },
+        "available_slots": [
+          {
+            "slot_id": "uuid-here",
+            "date": "2024-02-15",
+            "start_time": "10:00",
+            "end_time": "10:30",
+            "appointment_type": "consultation",
+            "location": {
+              "type": "clinic",
+              "address": "123 Medical Center Dr",
+              "room_number": "Room 205"
+            },
+            "pricing": {
+              "base_fee": 150.00,
+              "insurance_accepted": true,
+              "currency": "USD"
+            },
+            "special_requirements": ["bring_insurance_card"]
+          }
+        ]
+      }
+    ]
+  }
+}
+Implementation Requirements
+Time Zone Handling
+Store all times in UTC in database
+Convert to provider's local timezone for display
+Handle daylight saving time transitions
+Conflict Prevention
+Prevent overlapping slots for same provider
+Check for existing appointments before slot deletion
+Validate time ranges (end_time > start_time)
+Ensure minimum and maximum slot durations
+
+
+
+Testing Requirements
+Unit tests for time zone conversions
+tests for slot creation and conflict detection
+Test daylight saving time transitions
+Test concurrent booking scenarios
+Validate search result accuracy 
+
+

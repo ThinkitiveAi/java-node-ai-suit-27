@@ -1,0 +1,42 @@
+Provider Registration - Backend Prompt
+Prompt :
+User Story:
+As a healthcare provider, I want to register securely with my personal and clinic details, so I can access platform services after verification.
+Database Schema
+Provider Schema:
+{
+  id: UUID | ObjectId,
+  first_name: String,       // required, min 2, max 50
+  last_name: String,        // required, min 2, max 50
+  email: String,            // required, unique, valid email
+  phone_number: String,     // required, unique, valid intl format
+  password_hash: String,    // required, bcrypt hashed
+  specialization: String,   // required, min 3, max 100
+  license_number: String,   // required, alphanumeric, unique
+  years_of_experience: Int, // optional, 0–50
+  clinic_address: {
+    street: String,         // required, max 200
+    city: String,           // required, max 100
+    state: String,          // required, max 50
+    zip: String             // required, valid zip
+  },
+  verification_status: "pending" | "verified" | "rejected", // default: "pending"
+  is_active: Boolean,       // default: true
+  created_at: Timestamp,
+  updated_at: Timestamp
+}
+Validation Rules
+Email and phone must be valid and unique.
+Passwords must have 8+ chars, uppercase, lowercase, number, special char.
+License number must be unique and alphanumeric.
+All required fields must be present and properly formatted.
+
+
+Security Rules
+Hash passwords using bcrypt (≥ 12 salt rounds).
+Sanitize all input to prevent injection attacks.
+Never store or return plain-text passwords.
+Testing Requirements
+Unit tests for validation logic
+Test cases for duplicate email/phone scenarios
+Test password hashing and verification
